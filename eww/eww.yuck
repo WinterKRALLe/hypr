@@ -180,7 +180,7 @@
 ;;         WORKSPACES        ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defpoll currentWS :interval "1s" `hyprctl -j monitors | jq -r '.[0] | \(.activeWorkspace.id)'`)
+(defpoll currentWS :interval "1s" `hyprctl activeworkspace | grep "workspace ID" | awk '{print $3}'`)
 ; activeWS `hyprctl -j workspaces | jq -r '.[] | \(.id)'` -> ALL USED WORKSPACES BUT I DONT KNOW HOW TO IMPLEMENT IT
 ; IF YOU RE USIGN WS 1 2 5, IT WILL SHOW 1 2 5, BUT DONT KNOW HOW TO STORE IT
 (defvar my-workspaces "[1, 2, 3, 4, 5, 6, 7]")
