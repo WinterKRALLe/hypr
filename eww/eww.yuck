@@ -49,7 +49,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwidget powermenu_layout []
-  (box :class "powermenu_layout" :orientation "vertical"
+  (box :class "powermenu_layout" :orientation "vertical" :hexpand true
     (box :valign "start" :halign "end" :space-evenly false :spacing 25
       (_music)
       (label :text "|" :class "sep")
@@ -59,11 +59,14 @@
       (box :spacing 15 :class "tm-box" :space-evenly false
         :valign "end" :halign "start"
         (label :text "󰸘")
-        (label :text "${time.hour} : ${time.min}"))
-      (_buttons :shutdown "shutdown now" :reboot "reboot"
-        :logout "betterlockscreen --suspend"
-        :shutdown_icon "󰐥" :reboot_icon "󰑙"
-      :logout_icon "󰤄")
+        (label :text "${time.hour} : ${time.min}" :class "time"))
+      (box :space-evenly false :hexpand true :vexpand true
+        :valign "end" :halign "end"
+        (_buttons :shutdown "shutdown now" :reboot "reboot"
+          :logout "betterlockscreen --suspend"
+          :shutdown_icon "󰐥" :reboot_icon "󰑙"
+        :logout_icon "󰤄")
+      )
     )
   )
 )
@@ -132,13 +135,18 @@
     :orientation "h"
     :space-evenly false
     :halign "center"
+    :spacing 25
     {music != "" ? "${music}" : "No media playing"}
-    (button :onclick "playerctl previous" (image :path "icons/previous.svg" :image-height 30))
-    (button :onclick "playerctl play-pause" (image :path {
-        playerStatus == "Paused" ? "icons/play.svg" :
-        "icons/pause.svg"
-      } :image-height 30))
-    (button :onclick "playerctl next" (image :path "icons/next.svg" :image-height 30))
+    (eventbox :cursor "pointer"
+      (box :spacing 10
+        (button :onclick "playerctl previous" :class "music-btn" (image :path "icons/previous.svg" :image-height 30))
+        (button :onclick "playerctl play-pause" :class "music-btn" (image :path {
+            playerStatus == "Paused" ? "icons/play.svg" :
+            "icons/pause.svg"
+          } :image-height 30))
+        (button :onclick "playerctl next" :class "music-btn" (image :path "icons/next.svg" :image-height 30))
+      )
+    )
   )
 )
 
@@ -242,8 +250,7 @@
 
 (defwidget _buttons [shutdown shutdown_icon reboot
   reboot_icon logout logout_icon]
-  (eventbox :cursor "pointer" :vexpand true :hexpand true
-    :valign "end" :halign "end"
+  (eventbox :cursor "pointer"
     (box :class "btns-box" :spacing 45
       (button :onclick shutdown shutdown_icon)
       (button :onclick reboot reboot_icon)
