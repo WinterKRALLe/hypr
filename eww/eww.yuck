@@ -33,7 +33,7 @@
   (bar_layout))
 
 (defwindow bar1
-  :monitor 0
+  :monitor 1
   :stacking "fg"
   :exclusive true
   :geometry (geometry :width "100%" :height 32 :anchor "top center")
@@ -49,27 +49,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwidget powermenu_layout []
-  (box :class "layout-box" :orientation "vertical"
-    
-    (box :valign "start" :space-evenly false :spacing 25
-      (sys)
-      (_battery :status {EWW_BATTERY.BAT1.status} :capacity {EWW_BATTERY.BAT1.capacity})
-      (_network :strength net)
+  (box :class "powermenu_layout" :orientation "vertical"
+    (box :valign "start" :halign "end" :space-evenly false :spacing 25
+      (_music)
       (label :text "|" :class "sep")
       (_sundial)
     )
-    
     (box :space-evenly false :hexpand true :vexpand true
       (box :spacing 15 :class "tm-box" :space-evenly false
         :valign "end" :halign "start"
         (label :text "󰸘")
         (label :text "${time.hour} : ${time.min}"))
-      
       (_buttons :shutdown "shutdown now" :reboot "reboot"
         :logout "betterlockscreen --suspend"
         :shutdown_icon "󰐥" :reboot_icon "󰑙"
       :logout_icon "󰤄")
-      
     )
   )
 )
@@ -80,18 +74,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwidget bar_layout []
-  (box :class "bar_layout" :orientation "horizontal"
+  (box :class "bar_layout"
+    :hexpand true
     (box :valign "start" :space-evenly false :spacing 20
       (label :text "${time.hour}:${time.min}")
-      (sys :orientation "horizontal")
+      (_sys :orientation "horizontal")
     )
     (box :valign "start" :halign "center" :space-evenly false
       (_workspaces)
     )
-    (box :valign "start" :halign "end" :space-evenly true
+    (box :valign "start" :halign "end" :space-evenly false :spacing 20
       (_network :strength net)
       (_battery :status {EWW_BATTERY.BAT1.status} :capacity {EWW_BATTERY.BAT1.capacity})
-      (audio)
+      (_audio)
     )
   )
 )
@@ -108,9 +103,9 @@
 (defpoll volume :interval "0.1s" `pamixer --get-volume` )
 (defpoll muted :interval "0.1s" `pamixer --get-mute` )
 
-(defwidget audio []
+(defwidget _audio []
   (box :class "module" :space-evenly "true" :orientation "h" :spacing 3
-    (button :onrightclick "pavucontrol" :onclick "pamixer -t"
+    (button :onrightclick "pavucontrol &" :onclick "pamixer -t"
       (box
         (image :path {muted == true ? "icons/speaker-x.svg" :
           volume == 0 ? "icons/speaker-none.svg" :
@@ -124,6 +119,28 @@
   )
 )
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;           MUSIC           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deflisten music :initial ""
+`playerctl --follow metadata --format '{{ artist }} - {{ title }}'`)
+(deflisten playerStatus `playerctl --follow status`)
+(defwidget _music []
+  (box :class "music"
+    :orientation "h"
+    :space-evenly false
+    :halign "center"
+    {music != "" ? "${music}" : "No media playing"}
+    (button :onclick "playerctl previous" (image :path "icons/previous.svg" :image-height 30))
+    (button :onclick "playerctl play-pause" (image :path {
+        playerStatus == "Paused" ? "icons/play.svg" :
+        "icons/pause.svg"
+      } :image-height 30))
+    (button :onclick "playerctl next" (image :path "icons/next.svg" :image-height 30))
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;            TIME           ;;
@@ -150,7 +167,7 @@
       strength < 51 ? "icons/wifi-2.svg" :
       strength < 76 ? "icons/wifi-3.svg" :
       "icons/wifi-4.svg"}
-      :image-width 40 :image-height 28
+      :image-height 26
     )
   )
 )
@@ -170,7 +187,8 @@
       capacity < 94 ? "icons/battery-high-fill.svg" :
       "icons/battery-full-fill.svg"
       }
-    :image-width 40 :image-height 28)
+      :image-height 28
+    )
     (label :class "battery-label" :text "${capacity}%")
   )
 )
@@ -180,6 +198,7 @@
 ;;         WORKSPACES        ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; (defpoll currentWS :interval "1s" `hyprctl -j monitors | jq -r '.[1] | \(.activeWorkspace.id)'`)
 (defpoll currentWS :interval "1s" `hyprctl activeworkspace | grep "workspace ID" | awk '{print $3}'`)
 ; activeWS `hyprctl -j workspaces | jq -r '.[] | \(.id)'` -> ALL USED WORKSPACES BUT I DONT KNOW HOW TO IMPLEMENT IT
 ; IF YOU RE USIGN WS 1 2 5, IT WILL SHOW 1 2 5, BUT DONT KNOW HOW TO STORE IT
@@ -192,7 +211,7 @@
           (image :path {
             ws == currentWS ? "icons/circle-fill.svg" :
             "icons/circle.svg"
-          } :image-width 26 :image-height 26))
+          } :image-width 22 :image-height 22))
       )
     )
   )
@@ -203,7 +222,7 @@
 ;;      CPU & RAM USAGE      ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defwidget sys[]
+(defwidget _sys[]
   (box :class "cpu" :orientation "h" :space-evenly false :halign "center" :valign "center" :spacing 20
     (box
       (image :path "icons/cpu.svg" :image-width 40 :image-height 28)
@@ -223,13 +242,13 @@
 
 (defwidget _buttons [shutdown shutdown_icon reboot
   reboot_icon logout logout_icon]
-  (box :class "btns-box" :spacing 45
-    :vexpand false :hexpand true
+  (eventbox :cursor "pointer" :vexpand true :hexpand true
     :valign "end" :halign "end"
-    
-    (button :onclick shutdown shutdown_icon)
-    (button :onclick reboot reboot_icon)
-    (button :onclick logout logout_icon)
+    (box :class "btns-box" :spacing 45
+      (button :onclick shutdown shutdown_icon)
+      (button :onclick reboot reboot_icon)
+      (button :onclick logout logout_icon)
+    )
   )
 )
 
