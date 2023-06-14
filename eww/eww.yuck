@@ -80,16 +80,17 @@
   (box :class "bar_layout"
     :hexpand true
     (box :valign "start" :space-evenly false :spacing 20
-      (label :text "${time.hour}:${time.min}")
+      (label :text "${time.day}. ${time.month}. | ${time.hour}:${time.min}" :class "datetime")
       (_sys :orientation "horizontal")
     )
-    (box :valign "start" :halign "center" :space-evenly false
+    (box :valign "start" :halign "center" :space-evenly false :class "workspaces"
       (_workspaces)
     )
     (box :valign "start" :halign "end" :space-evenly false :spacing 20
       (_network :strength net)
       (_battery :status {EWW_BATTERY.BAT1.status} :capacity {EWW_BATTERY.BAT1.capacity})
       (_audio)
+      (_microphone)
     )
   )
 )
@@ -124,6 +125,25 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;	      MICROPHONE  	     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defpoll mic :interval "1s" `pamixer --source 45 --get-mute` )
+
+(defwidget _microphone []
+  (box :space-evenly false :orientation "h" :spacing 3
+    (button :onclick "pamixer --source 45 -t"
+      (image :path {mic == true ? "icons/microphone-slash.svg" :
+        "icons/microphone.svg"
+        }
+        :image-width 40 :image-height 26
+      )
+    )
+  )
+)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;           MUSIC           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -150,13 +170,14 @@
   )
 )
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;            TIME           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defpoll time :interval "5s"
-  :initial `date +'{"hour":"%H","min":"%M"}'`
-`date +'{"hour":"%H","min":"%M"}'`)
+  :initial `date +'{"day":"%d","month":"%m", "hour":"%H","min":"%M"}'`
+`date +'{"day":"%d","month":"%m","hour":"%H","min":"%M"}'`)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,12 +191,14 @@
 
 (defwidget _network [strength]
   (box :class "net-box" :halign "end"
-    (image :path {strength == "" ? "icons/wifi-off.svg" :
-      strength < 26 ? "icons/wifi-1.svg" :
-      strength < 51 ? "icons/wifi-2.svg" :
-      strength < 76 ? "icons/wifi-3.svg" :
-      "icons/wifi-4.svg"}
-      :image-height 26
+    (button :onclick "networkmanager_dmenu"
+      (image :path {strength == "" ? "icons/wifi-off.svg" :
+        strength < 26 ? "icons/wifi-1.svg" :
+        strength < 51 ? "icons/wifi-2.svg" :
+        strength < 76 ? "icons/wifi-3.svg" :
+        "icons/wifi-4.svg"}
+        :image-height 26
+      )
     )
   )
 )

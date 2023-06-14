@@ -8,6 +8,10 @@ $surface-red: #f87070;
   all: unset;
 }
 
+.datetime {
+  font-size: 1.1em;
+}
+
 
 /***********************/
 /*       LAYOUTS       */
@@ -88,3 +92,10 @@ $surface-red: #f87070;
 .tm-box {
   font-size: 1.5em;
 }
+
+
+/***********************/
+/*       BATTERY       */
+/***********************/
+
+.battery-label {}
