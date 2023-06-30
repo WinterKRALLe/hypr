@@ -29,14 +29,14 @@
   :monitor 0
   :stacking "fg"
   :exclusive true
-  :geometry (geometry :width "100%" :height 32 :anchor "top center")
+  :geometry (geometry :width "100%" :anchor "top center")
   (bar_layout))
 
 (defwindow bar1
   :monitor 1
   :stacking "fg"
   :exclusive true
-  :geometry (geometry :width "100%" :height 32 :anchor "top center")
+  :geometry (geometry :width "100%" :anchor "top center")
   (bar_layout))
 
 
@@ -77,17 +77,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwidget bar_layout []
-  (box :class "bar_layout"
-    :hexpand true
-    (box :valign "start" :space-evenly false :spacing 20
+  (box :class "bar_layout" :hexpand true
+    (box :valign "start" :halign "start" :space-evenly false :spacing 20 :class "bar"
       (label :text "${time.day}. ${time.month}. | ${time.hour}:${time.min}" :class "datetime")
-      (_sys :orientation "horizontal")
+      (_sys)
     )
-    (box :valign "start" :halign "center" :space-evenly false :class "workspaces"
+    (box :valign "start" :halign "center" :space-evenly false :class "bar"
       (_workspaces)
     )
-    (box :valign "start" :halign "end" :space-evenly false :spacing 20
-      (_network :strength net)
+    (box :valign "start" :halign "end" :space-evenly false :spacing 20 :class "bar"
+      (_network)
       (_battery :status {EWW_BATTERY.BAT1.status} :capacity {EWW_BATTERY.BAT1.capacity})
       (_audio)
       (_microphone)
@@ -116,8 +115,8 @@
           volume < 51 ? "icons/speaker-low.svg" :
           "icons/speaker-high.svg"
           }
-        :image-width 40 :image-height 26)
-        (label :text {muted == true ? "Muted" : volume})
+        :image-height 22)
+        (label :text {muted == true ? "Muted" : "${volume}%"})
       )
     )
   )
@@ -125,18 +124,18 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;	      MICROPHONE  	     ;;
+;;	   MICROPHONE	     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defpoll mic :interval "1s" `pamixer --source 45 --get-mute` )
+(defpoll mic :interval "1s" `pamixer --default-source --get-mute` )
 
 (defwidget _microphone []
   (box :space-evenly false :orientation "h" :spacing 3
-    (button :onclick "pamixer --source 45 -t"
+    (button :onclick "pamixer --default-source -t"
       (image :path {mic == true ? "icons/microphone-slash.svg" :
         "icons/microphone.svg"
         }
-        :image-width 40 :image-height 26
+        :image-height 22
       )
     )
   )
@@ -184,12 +183,12 @@
 ;;          NETWORK          ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defpoll net :interval "60s"
+(defpoll strength :interval "60s"
   :initial `N/A`
   `nmcli -t -f SIGNAL,ACTIVE device wifi \
   | awk -F':' '{if($2=="yes")print$1}'`)
 
-(defwidget _network [strength]
+(defwidget _network []
   (box :class "net-box" :halign "end"
     (button :onclick "networkmanager_dmenu"
       (image :path {strength == "" ? "icons/wifi-off.svg" :
@@ -197,7 +196,7 @@
         strength < 51 ? "icons/wifi-2.svg" :
         strength < 76 ? "icons/wifi-3.svg" :
         "icons/wifi-4.svg"}
-        :image-height 26
+        :image-height 22
       )
     )
   )
@@ -209,16 +208,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwidget _battery [status capacity]
-  (box :spacing 3 :hexpand true :halign "end"
+  (box :spacing 3 :hexpand true :halign "end" :class "battery"
     (image :class "battery-icon"
       :path {status == "Charging" ? "icons/battery-charging-fill.svg" :
-      capacity < 10 ? "icons/battery-empt-fill.svg" :
+      capacity < 10 ? "icons/battery-empty-fill.svg" :
       capacity < 35 ? "icons/battery-low-fill.svg" :
       capacity < 60 ? "icons/battery-medium-fill.svg" :
       capacity < 94 ? "icons/battery-high-fill.svg" :
       "icons/battery-full-fill.svg"
       }
-      :image-height 28
+      :image-height 22
     )
     (label :class "battery-label" :text "${capacity}%")
   )
@@ -229,20 +228,19 @@
 ;;         WORKSPACES        ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; (defpoll currentWS :interval "1s" `hyprctl -j monitors | jq -r '.[1] | \(.activeWorkspace.id)'`)
 (defpoll currentWS :interval "1s" `hyprctl activeworkspace | grep "workspace ID" | awk '{print $3}'`)
-; activeWS `hyprctl -j workspaces | jq -r '.[] | \(.id)'` -> ALL USED WORKSPACES BUT I DONT KNOW HOW TO IMPLEMENT IT
-; IF YOU RE USIGN WS 1 2 5, IT WILL SHOW 1 2 5, BUT DONT KNOW HOW TO STORE IT
-(defvar my-workspaces "[1, 2, 3, 4, 5, 6, 7]")
+(defvar my-workspaces "[1,2,3,4,5,6,7]")
 (defwidget _workspaces []
-  (eventbox :cursor "pointer"
-    (box :class "module" :space-evenly "false" :orientation "h" :spacing 20
+  (eventbox :cursor "pointer" :class "workspace"
+    :onscroll "echo {} | sed -e \"s/up/-1/g\" -e \"s/down/+1/g\" | xargs hyprctl dispatch workspace"
+    (box :class "module" :orientation "h" :spacing 20
       (for ws in my-workspaces
         (button :onclick "hyprctl dispatch workspace ${ws}"
           (image :path {
             ws == currentWS ? "icons/circle-fill.svg" :
             "icons/circle.svg"
-          } :image-width 22 :image-height 22))
+          } :image-height 22)
+        )
       )
     )
   )
@@ -254,13 +252,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwidget _sys[]
-  (box :class "cpu" :orientation "h" :space-evenly false :halign "center" :valign "center" :spacing 20
+  (box :class "cpu" :orientation "h" :space-evenly false :spacing 20
     (box
-      (image :path "icons/cpu.svg" :image-width 40 :image-height 28)
+      (image :path "icons/cpu.svg" :image-height 22)
       (label :text  "${round(EWW_CPU.avg, 0)}%" )
     )
     (box
-      (image :path "icons/memory.svg" :image-width 40 :image-height 28)
+      (image :path "icons/memory.svg" :image-height 22)
       (label :text "${round(EWW_RAM.used_mem_perc, 0)}%")
     )
   )

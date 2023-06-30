@@ -1,37 +1,50 @@
-$surface-darkgrey: #20252b;
-$surface-fg: #7A7B7C;
-$surface-lightgrey: #3d464e;
-$surface-grey: #2b3238;
-$surface-red: #f87070;
+$bg-primary: #16141c;
+$bg-secondary: #1a1926;
+$bg-accent: #e53265;
+$text-base: #fff;
+$text-muted: #979bb0;
+$text-accent: #2fd6b5;
+
+$plum: #8A508B;
+$rose-red: #E6BEC0;
+$licorice: #140411;
+$dark-purple: #381D29;
+$dark-purple-2: #361F34;
+$text-base: #e3e3e3;
+$font-size-base: 1.1em;
+
+$gradient: radial-gradient(rgba($plum, 0.7), rgba($dark-purple, 0.7), rgba($dark-purple-2, 0.7));
+
+$padding: 0.25em 1em;
+$primary-gradient: linear-gradient(to right, rgba($plum, 0.5), rgba($plum, 0.8), rgba($plum, 0.5));
 
 * {
   all: unset;
+  border-radius: 24px;
 }
 
 .datetime {
   font-size: 1.1em;
 }
 
+.bar {
+  background-image: $gradient;
+  padding: $padding;
+  color: $text-base;
+  font-size: $font-size-base;
+  margin: 0.25em 3em;
+}
 
 /***********************/
 /*       LAYOUTS       */
 /***********************/
 
-.powermenu_layout,
-.bar_layout {
-  font-family: "Phosphor";
-  color: $surface-fg;
-}
 
 .powermenu_layout {
   padding: 5em;
   font-size: 1.6em;
 }
 
-.bar_layout {
-  padding: 0.5em 3em;
-  font-size: 1.2em;
-}
 
 /***********************/
 /*    POWER BUTTONS    */
@@ -46,7 +59,7 @@ $surface-red: #f87070;
 
     &:hover {
       transition: 200ms linear background-color, border-radius;
-      background-color: rgba($surface-lightgrey, 0.6);
+      // background-color: rgba($surface-lightgrey, 0.6);
 
     }
   }
@@ -54,14 +67,14 @@ $surface-red: #f87070;
 
 
 .music-btn {
-  border: 1px solid $surface-fg;
+  // border: 1px solid $surface-fg;
   padding: 0.3em;
   border-radius: 100%;
 
 
-  &:hover {
-    background-color: rgba($surface-lightgrey, 0.6);
-  }
+  // &:hover {
+  //   // background-color: rgba($surface-lightgrey, 0.6);
+  // }
 }
 
 /***********************/
@@ -69,7 +82,6 @@ $surface-red: #f87070;
 /***********************/
 
 .sep {
-  color: $surface-lightgrey;
   padding-bottom: 0.25em;
 }
 
@@ -98,4 +110,8 @@ $surface-red: #f87070;
 /*       BATTERY       */
 /***********************/
 
-.battery-label {}
+// .battery {
+//   padding: $module-padding;
+//   background-image: $primary-gradient;
+//   color: $text-accent;
+// }
